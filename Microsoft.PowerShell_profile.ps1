@@ -98,8 +98,33 @@ function Update-OhMyPosh {
         Write-Error "Failed to update Oh-My-Posh. Error: $_"
     }
 }
-Update-OhMyPosh
 
+function Confirm-OhMyPosh {
+    if (-not $global:canConnectToGitHub) {
+        Write-Host "Skipping Oh-My-Posh update check due to GitHub.com not responding within 1 second." -ForegroundColor Yellow
+        return
+    }
+
+    try {
+        Write-Host "Checking for Oh-My-Posh updates..." -ForegroundColor Yellow
+        $updateNeeded = $false
+        $currentVersion = oh-my-posh version
+        $gitHubApiUrl = "https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest"
+        $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
+        $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
+        if ($currentVersion -lt $latestVersion) {
+            $updateNeeded = $true
+        }
+
+        if ($updateNeeded) {
+            Write-Host "Update available for Oh-My-Posh... Run Update-OhMyPosh to update" -ForegroundColor Yellow
+            
+        } 
+    } catch {
+    
+    }
+}
+Confirm-OhMyPosh
 
 
 # Admin Check and Prompt Customization
