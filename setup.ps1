@@ -4,6 +4,8 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     break
 }
 
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+
 # Function to test internet connectivity
 function Test-InternetConnection {
     try {
@@ -20,6 +22,83 @@ function Test-InternetConnection {
 if (-not (Test-InternetConnection)) {
     break
 }
+
+# Winget Install
+function Install-Winget {
+    try {
+        irm "https://github.com/chiefspecialk/powershell-profile/raw/main/InstallWinget.ps1" | iex
+    }
+    catch {
+        Write-Error "Failed to install Winget. Error: $_"
+        break
+    }
+}
+Install-Winget
+
+# PowerShell 7 Install
+function Install-PS7{
+    if (Test-Path -Path "$env:ProgramFiles\PowerShell\7") {
+        try {
+            Write-Host "Checking for PowerShell updates..." -ForegroundColor Cyan
+            $updateNeeded = $false
+            $currentVersion = $PSVersionTable.PSVersion.ToString()
+            $gitHubApiUrl = "https://api.github.com/repos/PowerShell/PowerShell/releases/latest"
+            $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
+            $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
+            if ($currentVersion -lt $latestVersion) {
+                $updateNeeded = $true
+            }
+    
+            if ($updateNeeded) {
+                Write-Host "Updating PowerShell..." -ForegroundColor Yellow
+                winget upgrade "Microsoft.PowerShell" --accept-source-agreements --accept-package-agreements
+                Write-Host "PowerShell has been updated. Please restart your shell to reflect changes" -ForegroundColor Magenta
+            } else {
+                Write-Host "Your PowerShell is up to date." -ForegroundColor Green
+            }
+        } catch {
+            Write-Error "Failed to update PowerShell. Error: $_"
+        }
+    } else {
+        Write-Host "Installing Powershell 7..."
+        winget install "Microsoft.PowerShell" --accept-source-agreements --accept-package-agreements
+    }
+    
+}
+Install-PS7
+
+# Install Windows Terminal and replace PS5 with PS7
+function Install-Terminal {
+    $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+    if (Test-Path -Path $settingsPath) {
+        Write-Host "Settings file found."
+        $settingsContent = Get-Content -Path $settingsPath | ConvertFrom-Json
+        $ps7Profile = $settingsContent.profiles.list | Where-Object { $_.name -eq $targetTerminalName }
+        if ($ps7Profile) {
+            $settingsContent.defaultProfile = $ps7Profile.guid
+            $updatedSettings = $settingsContent | ConvertTo-Json -Depth 100
+            Set-Content -Path $settingsPath -Value $updatedSettings
+            Write-Host "Default profile updated to $targetTerminalName using the name attribute."
+        } else {
+            Write-Host "No PowerShell 7 profile found in Windows Terminal settings using the name attribute."
+        }
+    } else {
+        Write-Host "Installing Windows Terminal..."
+        winget install Microsoft.WindowsTerminal
+        $settingsContent = Get-Content -Path $settingsPath | ConvertFrom-Json
+        $ps7Profile = $settingsContent.profiles.list | Where-Object { $_.name -eq $targetTerminalName }
+        if ($ps7Profile) {
+            $settingsContent.defaultProfile = $ps7Profile.guid
+            $updatedSettings = $settingsContent | ConvertTo-Json -Depth 100
+            Set-Content -Path $settingsPath -Value $updatedSettings
+            Write-Host "Default profile updated to $targetTerminalName using the name attribute."
+        } else {
+            Write-Host "No PowerShell 7 profile found in Windows Terminal settings using the name attribute."
+        }    
+    }
+    
+}
+Install-Terminal
 
 # Profile creation or update
 if (!(Test-Path -Path $PROFILE -PathType Leaf)) {
@@ -56,6 +135,8 @@ else {
         Write-Error "Failed to backup and update the profile. Error: $_"
     }
 }
+
+
 
 # OMP Install
 try {
