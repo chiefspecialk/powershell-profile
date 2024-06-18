@@ -3,14 +3,15 @@
 A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.
 
 Features:
-    - Installs Winget
-    - Installs latest PowerShell version (7+)
-    - Installs Windows Terminal (if on Win10)
-    - Set Powershell 7 as default in Terminal
-    - Installs Oh My Posh
-    - Installs Chocolaty
-    - Installs Nerd Fonts
-    - Installs Zoxide
+
+    * Installs Winget
+    * Installs latest PowerShell version (7+)
+    * Installs Windows Terminal (if on Win10)
+    * Set Powershell 7 as default in Terminal
+    * Installs Oh My Posh
+    * Installs Chocolaty
+    * Installs Nerd Fonts
+    * Installs Zoxide
     
 ## ⚡ One Line Install (Elevated PowerShell Recommended)
 
