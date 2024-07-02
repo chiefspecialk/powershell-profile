@@ -33,7 +33,11 @@ function Install-Winget {
         break
     }
 }
-Install-Winget
+$wingetExists = Get-Command -Name winget -ErrorAction SilentlyContinue
+if (-not $wingetExists) {
+    Install-Winget
+}
+
 
 # PowerShell 7 Install
 function Install-PS7{
@@ -86,6 +90,9 @@ function Install-Terminal {
     } else {
         Write-Host "Installing Windows Terminal..."
         winget install Microsoft.WindowsTerminal
+        Start-Process wt.exe
+        Start-Sleep -Seconds 10
+        Stop-Process -name WindowsTerminal -Force
         $settingsContent = Get-Content -Path $settingsPath | ConvertFrom-Json
         $ps7Profile = $settingsContent.profiles.list | Where-Object { $_.name -eq $targetTerminalName }
         if ($ps7Profile) {
