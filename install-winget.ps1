@@ -857,6 +857,7 @@ if (Get-WingetStatus) {
     if ($Force -eq $false) {
         Write-Warning "winget is already installed, exiting..."
         Write-Warning "If you want to reinstall winget, run the script with the -Force parameter."
+        Sleep 20
         Exit
     }
 }
