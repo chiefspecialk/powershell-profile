@@ -104,7 +104,7 @@ Install-Terminal
 #Create local json file for WT
 Start-Process wt.exe
 Start-Sleep -Seconds 2
-Stop-Process -name WindowsTerminal
+Stop-Process -name WindowsTerminal -Force
 
 # Profile creation or update
 if (!(Test-Path -Path $PROFILE -PathType Leaf)) {
