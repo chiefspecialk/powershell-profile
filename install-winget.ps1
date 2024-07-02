@@ -221,7 +221,7 @@ function Get-OSInfo {
         return $result
     } catch {
         Write-Error "Unable to get OS version details.`nError: $_"
-        ExitWithDelay 1
+        Exit 1
     }
 }
 
@@ -857,7 +857,7 @@ if (Get-WingetStatus) {
     if ($Force -eq $false) {
         Write-Warning "winget is already installed, exiting..."
         Write-Warning "If you want to reinstall winget, run the script with the -Force parameter."
-        ExitWithDelay 0 5
+        Exit
     }
 }
 
