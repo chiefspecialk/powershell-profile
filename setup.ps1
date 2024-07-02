@@ -183,7 +183,22 @@ try {
         $targetTerminalFont = "CaskaydiaCove Nerd Font Mono"
         $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
         $settingsContent = Get-Content -Path $settingsPath | ConvertFrom-Json
-        $settingsContent.profiles.defaults.font.face = $targetTerminalFont
+        if ($settingsContent.profiles.defaults.font.face) {
+            $settingsContent.profiles.defaults.font.face = $targetTerminalFont
+        }
+        else {
+            $FontJson = @{
+                'profiles' = @{
+                    'defaults' = @{
+                        'font' = @{
+                            'face' = 'CaskaydiaCove Nerd Font Mono'
+                        }
+                    }
+                }
+            }
+        }
+        
+        $settingsContent.profiles.defaults.font.face = $FontJson | ConvertTo-Json
         $updatedSettings = $settingsContent | ConvertTo-Json -Depth 100
         Set-Content -Path $settingsPath -Value $updatedSettings
         Write-Host "Default profile apperance updated to $targetTerminalFont."
