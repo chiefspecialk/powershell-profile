@@ -1077,7 +1077,7 @@ try {
         }
     }
 
-    ExitWithDelay 0
+    
 } catch {
     # ============================================================================ #
     # Error handling
@@ -1095,5 +1095,5 @@ try {
         Write-Warning "Error: $($_.Exception.Message)`n"
     }
 
-    ExitWithDelay 1
+    
 }
