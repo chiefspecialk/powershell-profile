@@ -191,14 +191,15 @@ try {
                 'profiles' = @{
                     'defaults' = @{
                         'font' = @{
-                            'face' = 'CaskaydiaCove Nerd Font Mono'
+                            'face' = $targetTerminalFont
                         }
                     }
                 }
             }
+            $settingsContent.profiles.defaults.font.face = $FontJson | ConvertFrom-Json
         }
+
         
-        $settingsContent.profiles.defaults.font.face = $FontJson | ConvertTo-Json
         $updatedSettings = $settingsContent | ConvertTo-Json -Depth 100
         Set-Content -Path $settingsPath -Value $updatedSettings
         Write-Host "Default profile apperance updated to $targetTerminalFont."
