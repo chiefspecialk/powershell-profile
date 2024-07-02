@@ -26,7 +26,7 @@ if (-not (Test-InternetConnection)) {
 # Winget Install
 function Install-Winget {
     try {
-        irm "https://github.com/chiefspecialk/powershell-profile/raw/main/InstallWinget.ps1" | iex
+        irm "https://github.com/chiefspecialk/powershell-profile/raw/main/install-winget.ps1" | iex
     }
     catch {
         Write-Error "Failed to install Winget. Error: $_"
@@ -69,6 +69,7 @@ Install-PS7
 
 # Install Windows Terminal and replace PS5 with PS7
 function Install-Terminal {
+    $targetTerminalName = "PowerShell"
     $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
     if (Test-Path -Path $settingsPath) {
         Write-Host "Settings file found."
@@ -169,6 +170,14 @@ try {
 
         Remove-Item -Path ".\CascadiaCode" -Recurse -Force
         Remove-Item -Path ".\CascadiaCode.zip" -Force
+
+        $targetTerminalFont = "CaskaydiaCove Nerd Font Mono"
+        $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        $settingsContent = Get-Content -Path $settingsPath | ConvertFrom-Json
+        $settingsContent.profiles.defaults.font.face = $targetTerminalFont
+        $updatedSettings = $settingsContent | ConvertTo-Json -Depth 100
+        Set-Content -Path $settingsPath -Value $updatedSettings
+        Write-Host "Default profile apperance updated to $targetTerminalFont."
     }
 }
 catch {
