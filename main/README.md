@@ -18,7 +18,7 @@ Features:
 Execute the following command in an elevated PowerShell window to install the PowerShell profile:
 
 ```
-irm "https://github.com/chiefspecialk/powershell-profile/raw/main/setup.ps1" | iex
+irm "https://github.com/chiefspecialk/powershell-profile/raw/test/setup.ps1" | iex
 ```
 
 ## 🛠️ Fix the Missing Font
