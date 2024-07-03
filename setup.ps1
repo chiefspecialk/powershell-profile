@@ -4,6 +4,8 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     break
 }
 
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+
 # Function to test internet connectivity
 function Test-InternetConnection {
     try {
@@ -21,6 +23,93 @@ if (-not (Test-InternetConnection)) {
     break
 }
 
+# Winget Install
+function Install-Winget {
+    try {
+        irm "https://github.com/chiefspecialk/powershell-profile/raw/main/install-winget.ps1" | iex
+    }
+    catch {
+        Write-Error "Failed to install Winget. Error: $_"
+        break
+    }
+}
+$wingetExists = Get-Command -Name winget -ErrorAction SilentlyContinue
+if (-not $wingetExists) {
+    Install-Winget
+}
+
+
+# PowerShell 7 Install
+function Install-PS7{
+    if (Test-Path -Path "$env:ProgramFiles\PowerShell\7") {
+        try {
+            Write-Host "Checking for PowerShell updates..." -ForegroundColor Cyan
+            $updateNeeded = $false
+            $currentVersion = $PSVersionTable.PSVersion.ToString()
+            $gitHubApiUrl = "https://api.github.com/repos/PowerShell/PowerShell/releases/latest"
+            $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
+            $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
+            if ($currentVersion -lt $latestVersion) {
+                $updateNeeded = $true
+            }
+    
+            if ($updateNeeded) {
+                Write-Host "Updating PowerShell..." -ForegroundColor Yellow
+                winget upgrade "Microsoft.PowerShell" --accept-source-agreements --accept-package-agreements
+                Write-Host "PowerShell has been updated. Please restart your shell to reflect changes" -ForegroundColor Magenta
+            } else {
+                Write-Host "Your PowerShell is up to date." -ForegroundColor Green
+            }
+        } catch {
+            Write-Error "Failed to update PowerShell. Error: $_"
+        }
+    } else {
+        Write-Host "Installing Powershell 7..."
+        winget install "Microsoft.PowerShell" --accept-source-agreements --accept-package-agreements
+    }
+    
+}
+Install-PS7
+
+# Install Windows Terminal and replace PS5 with PS7
+function Install-Terminal {
+    $targetTerminalName = "PowerShell"
+    $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+    if (Test-Path -Path $settingsPath) {
+        Write-Host "Settings file found."
+        $settingsContent = Get-Content -Path $settingsPath | ConvertFrom-Json
+        $ps7Profile = $settingsContent.profiles.list | Where-Object { $_.name -eq $targetTerminalName }
+        if ($ps7Profile) {
+            $settingsContent.defaultProfile = $ps7Profile.guid
+            $updatedSettings = $settingsContent | ConvertTo-Json -Depth 100
+            Set-Content -Path $settingsPath -Value $updatedSettings
+            Write-Host "Default profile updated to $targetTerminalName using the name attribute."
+        } else {
+            Write-Host "No PowerShell 7 profile found in Windows Terminal settings using the name attribute."
+        }
+    } else {
+        Write-Host "Installing Windows Terminal..."
+        winget install Microsoft.WindowsTerminal
+        Start-Process wt.exe
+        Start-Sleep -Seconds 10
+        Stop-Process -name WindowsTerminal -Force
+        $settingsContent = Get-Content -Path $settingsPath | ConvertFrom-Json
+        $ps7Profile = $settingsContent.profiles.list | Where-Object { $_.name -eq $targetTerminalName }
+        if ($ps7Profile) {
+            $settingsContent.defaultProfile = $ps7Profile.guid
+            $updatedSettings = $settingsContent | ConvertTo-Json -Depth 100
+            Set-Content -Path $settingsPath -Value $updatedSettings
+            Write-Host "Default profile updated to $targetTerminalName using the name attribute."
+        } else {
+            Write-Host "No PowerShell 7 profile found in Windows Terminal settings using the name attribute."
+        }    
+    }
+    
+}
+Install-Terminal
+
+
+
 # Profile creation or update
 if (!(Test-Path -Path $PROFILE -PathType Leaf)) {
     try {
@@ -37,7 +126,7 @@ if (!(Test-Path -Path $PROFILE -PathType Leaf)) {
             New-Item -Path $profilePath -ItemType "directory"
         }
 
-        Invoke-RestMethod https://github.com/ChrisTitusTech/powershell-profile/raw/main/Microsoft.PowerShell_profile.ps1 -OutFile $PROFILE
+        Invoke-RestMethod https://github.com/chiefspecialk/powershell-profile/raw/main/Microsoft.PowerShell_profile.ps1 -OutFile $PROFILE
         Write-Host "The profile @ [$PROFILE] has been created."
         Write-Host "If you want to make any personal changes or customizations, please do so at [$profilePath\Profile.ps1] as there is an updater in the installed profile which uses the hash to update the profile and will lead to loss of changes"
     }
@@ -48,7 +137,7 @@ if (!(Test-Path -Path $PROFILE -PathType Leaf)) {
 else {
     try {
         Get-Item -Path $PROFILE | Move-Item -Destination "oldprofile.ps1" -Force
-        Invoke-RestMethod https://github.com/ChrisTitusTech/powershell-profile/raw/main/Microsoft.PowerShell_profile.ps1 -OutFile $PROFILE
+        Invoke-RestMethod https://github.com/chiefspecialk/powershell-profile/raw/main/Microsoft.PowerShell_profile.ps1 -OutFile $PROFILE
         Write-Host "The profile @ [$PROFILE] has been created and old profile removed."
         Write-Host "Please back up any persistent components of your old profile to [$HOME\Documents\PowerShell\Profile.ps1] as there is an updater in the installed profile which uses the hash to update the profile and will lead to loss of changes"
     }
@@ -56,6 +145,8 @@ else {
         Write-Error "Failed to backup and update the profile. Error: $_"
     }
 }
+
+
 
 # OMP Install
 try {
@@ -88,6 +179,14 @@ try {
 
         Remove-Item -Path ".\CascadiaCode" -Recurse -Force
         Remove-Item -Path ".\CascadiaCode.zip" -Force
+
+        $targetTerminalFont = "CaskaydiaCove Nerd Font Mono"
+        $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        $settingsContent = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
+        $settingsContent.profiles.defaults.font.face = $targetTerminalFont
+        $updatedSettings = $settingsContent | ConvertTo-Json -Depth 4
+        Set-Content -Path $settingsPath -Value $updatedSettings -Encoding UTF8
+        Write-Host "Default profile apperance updated to $targetTerminalFont."
     }
 }
 catch {
