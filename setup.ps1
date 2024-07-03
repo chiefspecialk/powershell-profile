@@ -227,5 +227,7 @@ catch {
 }
 
 if ($PSVersionTable.PSEdition -eq "Desktop"){
-    Start-Process wt.exe -ArgumentList "-NoExit","-c","& {irm "https://github.com/chiefspecialk/powershell-profile/raw/main/setup.ps1" | iex}"
+    $scriptblock = "irm "https://github.com/chiefspecialk/powershell-profile/raw/main/setup.ps1" | iex"
+    Start-Process wt.exe -ArgumentList "pwsh.exe", -command, $scriptblock
+    Write-Host "Profile should now be installed for Powershell 7 and usable in Windows Terminal. Enjoy!"
 }
