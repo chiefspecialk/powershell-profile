@@ -18,6 +18,48 @@ function Test-InternetConnection {
     }
 }
 
+# Function to install Nerd Fonts
+function Install-NerdFonts {
+    param (
+        [string]$FontName = "CascadiaCode",
+        [string]$FontDisplayName = "CaskaydiaCove NF",
+        [string]$Version = "3.2.1"
+    )
+
+    try {
+        [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
+        $fontFamilies = (New-Object System.Drawing.Text.InstalledFontCollection).Families.Name
+        if ($fontFamilies -notcontains "${FontDisplayName}") {
+            $fontZipUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v${Version}/${FontName}.zip"
+            $zipFilePath = "$env:TEMP\${FontName}.zip"
+            $extractPath = "$env:TEMP\${FontName}"
+
+            $webClient = New-Object System.Net.WebClient
+            $webClient.DownloadFileAsync((New-Object System.Uri($fontZipUrl)), $zipFilePath)
+
+            while ($webClient.IsBusy) {
+                Start-Sleep -Seconds 2
+            }
+
+            Expand-Archive -Path $zipFilePath -DestinationPath $extractPath -Force
+            $destination = (New-Object -ComObject Shell.Application).Namespace(0x14)
+            Get-ChildItem -Path $extractPath -Recurse -Filter "*.ttf" | ForEach-Object {
+                If (-not(Test-Path "C:\Windows\Fonts\$($_.Name)")) {
+                    $destination.CopyHere($_.FullName, 0x10)
+                }
+            }
+
+            Remove-Item -Path $extractPath -Recurse -Force
+            Remove-Item -Path $zipFilePath -Force
+        } else {
+            Write-Host "Font ${FontDisplayName} already installed"
+        }
+    }
+    catch {
+        Write-Error "Failed to download or install ${FontDisplayName} font. Error: $_"
+    }
+}
+
 # Check for internet connectivity before proceeding
 if (-not (Test-InternetConnection)) {
     break
@@ -108,8 +150,6 @@ function Install-Terminal {
 }
 Install-Terminal
 
-
-
 # Profile creation or update
 if (!(Test-Path -Path $PROFILE -PathType Leaf)) {
     try {
@@ -158,42 +198,7 @@ catch {
 }
 
 # Font Install
-try {
-    [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
-    $fontFamilies = (New-Object System.Drawing.Text.InstalledFontCollection).Families.Name
-
-    if ($fontFamilies -notcontains "CaskaydiaCove NF") {
-        $webClient = New-Object System.Net.WebClient
-        $webClient.DownloadFileAsync((New-Object System.Uri("https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/CascadiaCode.zip")), ".\CascadiaCode.zip")
-        
-        while ($webClient.IsBusy) {
-            Start-Sleep -Seconds 2
-        }
-
-        Expand-Archive -Path ".\CascadiaCode.zip" -DestinationPath ".\CascadiaCode" -Force
-        $destination = (New-Object -ComObject Shell.Application).Namespace(0x14)
-        Get-ChildItem -Path ".\CascadiaCode" -Recurse -Filter "*.ttf" | ForEach-Object {
-            If (-not(Test-Path "C:\Windows\Fonts\$($_.Name)")) {        
-                $destination.CopyHere($_.FullName, 0x10)
-            }
-        }
-
-        Remove-Item -Path ".\CascadiaCode" -Recurse -Force
-        Remove-Item -Path ".\CascadiaCode.zip" -Force
-
-        $targetTerminalFont = "CaskaydiaCove Nerd Font Mono"
-        $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-        $settingsContent = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
-        $settingsContent.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value @{face = $targetTerminalFont}
-        #$settingsContent.profiles.defaults.font.face = $targetTerminalFont
-        $updatedSettings = $settingsContent | ConvertTo-Json -Depth 4
-        Set-Content -Path $settingsPath -Value $updatedSettings -Encoding UTF8
-        Write-Host "Default profile apperance updated to $targetTerminalFont."
-    }
-}
-catch {
-    Write-Error "Failed to download or install the Cascadia Code font. Error: $_"
-}
+Install-NerdFonts -FontName "CascadiaCode" -FontDisplayName "CaskaydiaCove NF"
 
 # Final check and message to the user
 if ((Test-Path -Path $PROFILE) -and (winget list --name "OhMyPosh" -e) -and ($fontFamilies -contains "CaskaydiaCove NF")) {
