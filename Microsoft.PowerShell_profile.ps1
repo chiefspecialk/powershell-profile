@@ -8,7 +8,7 @@
 ############                                                                                                         ############
 ############                DO NOT MODIFY THIS FILE. THIS FILE IS HASHED AND UPDATED AUTOMATICALLY.                  ############
 ############                    ANY CHANGES MADE TO THIS FILE WILL BE OVERWRITTEN BY COMMITS TO                      ############
-############                       https://github.com/chiefspecialk/powershell-profile.git.                          ############
+############                       https://github.com/chiefspecialk/powershell-profile.git                           ############
 ############                                                                                                         ############
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!#
 ############                                                                                                         ############
@@ -84,36 +84,6 @@ function Update-PowerShell {
     }
 }
 Update-PowerShell
-
-
-function Update-OhMyPosh {
-    if (-not $global:canConnectToGitHub) {
-        Write-Host "Skipping Oh-My-Posh update check due to GitHub.com not responding within 1 second." -ForegroundColor Yellow
-        return
-    }
-
-    try {
-        Write-Host "Checking for Oh-My-Posh updates..." -ForegroundColor Yellow
-        $updateNeeded = $false
-        $currentVersion = oh-my-posh version
-        $gitHubApiUrl = "https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/releases/latest"
-        $latestReleaseInfo = Invoke-RestMethod -Uri $gitHubApiUrl
-        $latestVersion = $latestReleaseInfo.tag_name.Trim('v')
-        if ($currentVersion -lt $latestVersion) {
-            $updateNeeded = $true
-        }
-
-        if ($updateNeeded) {
-            Write-Host "Updating Oh-My-Posh..." -ForegroundColor Yellow
-            winget upgrade "JanDeDobbeleer.OhMyPosh" --accept-source-agreements --accept-package-agreements
-            Write-Host "Oh-My-Posh has been updated. Please restart your shell to reflect changes" -ForegroundColor Magenta
-        } else {
-            Write-Host "Your Oh-My-Posh is up to date." -ForegroundColor Green
-        }
-    } catch {
-        Write-Error "Failed to update Oh-My-Posh. Error: $_"
-    }
-}
 
 # Admin Check and Prompt Customization
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
