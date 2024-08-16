@@ -226,6 +226,9 @@ catch {
     Write-Error "Failed to install zoxide. Error: $_"
 }
 
+#Disable Powershell 7 Telemetry
+[System.Environment]::SetEnvironmentVariable('POWERSHELL_TELEMETRY_OPTOUT', 'true', [System.EnvironmentVariableTarget]::Machine)
+
 if ($PSVersionTable.PSEdition -eq "Desktop"){
     $scriptblock = {irm "https://github.com/chiefspecialk/powershell-profile/raw/main/setup.ps1" | iex}
     Start-Process wt.exe -ArgumentList "pwsh.exe", -command, $scriptblock
