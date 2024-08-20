@@ -60,6 +60,18 @@ function Install-NerdFonts {
     }
 }
 
+#Sets Nerd Font as Default for Terminal
+function Set-DefaultFont {
+    $targetTerminalFont = "CaskaydiaCove Nerd Font Mono"
+    $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+    $settingsContent = Get-Content -Path $settingsPath -Raw | ConvertFrom-Json
+    $settingsContent.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value @{face = $targetTerminalFont }
+    $updatedSettings = $settingsContent | ConvertTo-Json -Depth 4
+    Set-Content -Path $settingsPath -Value $updatedSettings -Encoding UTF8
+    Write-Host "Default profile appearance updated to $targetTerminalFont."
+    
+}
+
 # Check for internet connectivity before proceeding
 if (-not (Test-InternetConnection)) {
     break
@@ -199,6 +211,7 @@ catch {
 
 # Font Install
 Install-NerdFonts -FontName "CascadiaCode" -FontDisplayName "CaskaydiaCove NF"
+Set-DefaultFont
 
 # Final check and message to the user
 if ((Test-Path -Path $PROFILE) -and (winget list --name "OhMyPosh" -e) -and ($fontFamilies -contains "CaskaydiaCove NF")) {
