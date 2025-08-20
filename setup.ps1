@@ -228,6 +228,14 @@ catch {
     Write-Error "Failed to install Chocolatey. Error: $_"
 }
 
+# NuGet Forced Install
+try {
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Confirm:$False -Force | Out-Null
+}
+catch {
+    Write-Error "Failed to install Nuget. Error: $_"
+}
+
 # Terminal Icons Install
 try {
     Install-Module -Name Terminal-Icons -Repository PSGallery -Force
